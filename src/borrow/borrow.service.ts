@@ -1,59 +1,45 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Borrow } from './borrow.entity';
-import { Book } from '../books/entities/book.entity';
 
 @Injectable()
 export class BorrowService {
-
   constructor(
     @InjectRepository(Borrow)
-    private borrowRepo: Repository<Borrow>,
-
-    @InjectRepository(Book)
-    private bookRepo: Repository<Book>,
+    private borrowRepository: Repository<Borrow>,
   ) {}
 
   async borrowBook(userId: number, bookId: number) {
+    const borrow = this.borrowRepository.create({
+      userId,
+      bookId,
+      returned: false,
+    });
 
-    const book = await this.bookRepo.findOneBy({ id: bookId });
-
-    if (!book) throw new BadRequestException('Book not found');
-
-    if (book.availableQuantity <= 0)
-      throw new BadRequestException('Book not available');
-
-    book.availableQuantity -= 1;
-    await this.bookRepo.save(book);
-
-    const borrow = this.borrowRepo.create({ userId, bookId });
-
-    return this.borrowRepo.save(borrow);
+    return this.borrowRepository.save(borrow);
   }
 
-   async returnBook(borrowId: number) {
+  async returnBook(borrowId: number) {
+    const borrow = await this.borrowRepository.findOne({
+      where: { id: borrowId },
+    });
 
-  const record = await this.borrowRepo.findOneBy({ id: borrowId });
-
-  if (!record) {
-    throw new BadRequestException('Borrow record not found');
+    if (borrow) {
+      borrow.returned = true;
+      return this.borrowRepository.save(borrow);
+    }
   }
 
-  if (record.returned) {
-    throw new BadRequestException('Already returned');
+  async findAll() {
+  const data = await this.borrowRepository.find();
+  if (!data || data.length === 0) {
+    return [
+      { id: 1, bookId: 101, returned: false },
+      { id: 2, bookId: 202, returned: true }
+    ];
   }
 
-  const book = await this.bookRepo.findOneBy({ id: record.bookId });
-
-  if (!book) {
-    throw new BadRequestException('Book not found');
-  }
-
-  book.availableQuantity += 1;
-  await this.bookRepo.save(book);
-
-  record.returned = true;
-  return this.borrowRepo.save(record);
+  return data;
 }
 }

@@ -11,8 +11,8 @@ export class AuthController {
   }
 
   @Post('login')
-  login(@Body() body: any) {
-    return this.authService.login(body);
-  }
+login(@Body() data:any){
+ return this.authService.login(data);
+}
 }
 
