@@ -12,6 +12,16 @@ export class Borrow {
   @Column()
   bookId: number;
 
-  @Column({ default: false })
-  returned: boolean;
+  @Column()
+  bookName: string;
+
+  @Column()
+  bookAuthor: string;
+
+  @Column()
+  isbn: string;
+
+  @Column({ default: 'BORROWED' })
+  status: string;
+
 }

@@ -5,41 +5,27 @@ import { Borrow } from './borrow.entity';
 
 @Injectable()
 export class BorrowService {
+
   constructor(
     @InjectRepository(Borrow)
-    private borrowRepository: Repository<Borrow>,
+    private borrowRepo: Repository<Borrow>,
   ) {}
 
-  async borrowBook(userId: number, bookId: number) {
-    const borrow = this.borrowRepository.create({
-      userId,
-      bookId,
-      returned: false,
+  async borrowBook(data: any) {
+    const borrow = this.borrowRepo.create(data);
+    return this.borrowRepo.save(borrow);
+  }
+
+  async getBorrowedBooks(userId: number) {
+    return this.borrowRepo.find({
+      where: { userId }
     });
-
-    return this.borrowRepository.save(borrow);
   }
 
-  async returnBook(borrowId: number) {
-    const borrow = await this.borrowRepository.findOne({
-      where: { id: borrowId },
+  async returnBook(id: number) {
+    return this.borrowRepo.update(id, {
+      status: 'RETURNED'
     });
-
-    if (borrow) {
-      borrow.returned = true;
-      return this.borrowRepository.save(borrow);
-    }
   }
 
-  async findAll() {
-  const data = await this.borrowRepository.find();
-  if (!data || data.length === 0) {
-    return [
-      { id: 1, bookId: 101, returned: false },
-      { id: 2, bookId: 202, returned: true }
-    ];
-  }
-
-  return data;
-}
 }

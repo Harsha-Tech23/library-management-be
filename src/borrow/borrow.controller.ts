@@ -1,29 +1,24 @@
-import { Controller, Post, Body, UseGuards, Patch, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
 import { BorrowService } from './borrow.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('borrow')
 export class BorrowController {
-  constructor(private readonly borrowService: BorrowService) {}
 
-  @UseGuards(JwtAuthGuard)
+  constructor(private borrowService: BorrowService) {}
+
   @Post()
-  borrow(@Req() req, @Body() body: any) {
-    return this.borrowService.borrowBook(
-      req.user.userId,
-      body.bookId
-    );
+  borrowBook(@Body() data: any) {
+    return this.borrowService.borrowBook(data);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Patch('return')
-  returnBook(@Body() body: any) {
-    return this.borrowService.returnBook(body.borrowId);
+  @Get(':userId')
+  getBorrowedBooks(@Param('userId') userId: number) {
+    return this.borrowService.getBorrowedBooks(userId);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll() {
-    return this.borrowService.findAll();
+  @Patch('return/:id')
+  returnBook(@Param('id') id: number) {
+    return this.borrowService.returnBook(id);
   }
+
 }

@@ -1,51 +1,51 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-  ) {}
+
+  constructor(private usersService: UsersService) {}
 
   async signup(data: any) {
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await this.usersService.create({
       ...data,
-      password: hashedPassword,
+      password: hashedPassword
     });
 
-    return { message: 'User registered successfully', user };
+    return {
+      message: "User created",
+      user
+    };
+
   }
 
-  async login(data: any) {
+  async login(loginDto: any) {
 
-  console.log("LOGIN DATA:", data);
+    const user = await this.usersService.findByEmail(loginDto.email);
 
-  const users = await this.usersService.findAll();
-  console.log("DB USERS:", users);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  const user = users.find(u => u.email === data.email);
-  console.log("FOUND USER:", user);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password
+    );
 
-  if (!user) {
-    throw new UnauthorizedException('Invalid credentials');
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role
+    };
+
   }
 
-  const isPasswordValid = await bcrypt.compare(data.password, user.password);
-  console.log("PASSWORD MATCH:", isPasswordValid);
-
-  if (!isPasswordValid) {
-    throw new UnauthorizedException('Invalid credentials');
-  }
-
-  const payload = { sub: user.id, role: user.role };
-
-  return {
-    access_token: this.jwtService.sign(payload),
-  };
-}
 }
