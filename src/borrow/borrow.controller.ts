@@ -1,24 +1,29 @@
-import { Controller, Post, Body, Get, Param, Patch } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
 import { BorrowService } from './borrow.service';
 
 @Controller('borrow')
 export class BorrowController {
 
-  constructor(private borrowService: BorrowService) {}
+constructor(private borrowService: BorrowService){}
 
-  @Post()
-  borrowBook(@Body() data: any) {
-    return this.borrowService.borrowBook(data);
-  }
+@Post()
+create(@Body() body:any){
+return this.borrowService.create(body)
+}
 
-  @Get(':userId')
-  getBorrowedBooks(@Param('userId') userId: number) {
-    return this.borrowService.getBorrowedBooks(userId);
-  }
+@Get()
+getAllBorrows(){
+return this.borrowService.getAllBorrows()
+}
 
-  @Patch('return/:id')
-  returnBook(@Param('id') id: number) {
-    return this.borrowService.returnBook(id);
-  }
+@Get(':userId')
+getUserBorrows(@Param('userId') userId:number){
+return this.borrowService.getUserBorrows(userId)
+}
+
+@Delete(':id')
+remove(@Param('id') id:number){
+return this.borrowService.remove(id)
+}
 
 }

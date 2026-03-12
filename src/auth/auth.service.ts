@@ -1,51 +1,81 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
 
-  constructor(private usersService: UsersService) {}
+constructor(
+@InjectRepository(User)
+private userRepo: Repository<User>,
+) {}
 
-  async signup(data: any) {
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+async signup(body:any){
 
-    const user = await this.usersService.create({
-      ...data,
-      password: hashedPassword
-    });
+const existingUser = await this.userRepo.findOne({
+where:{ email: body.email }
+});
 
-    return {
-      message: "User created",
-      user
-    };
+if(existingUser){
+return { message:"Email already exists" };
+}
 
-  }
+const user = this.userRepo.create({
+name: body.name,
+email: body.email,
+password: body.password,
+role: body.role
+});
 
-  async login(loginDto: any) {
+await this.userRepo.save(user);
 
-    const user = await this.usersService.findByEmail(loginDto.email);
+return { message:"Signup successful" };
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+}
 
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.password
-    );
 
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+async login(body:any){
 
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role
-    };
+const user = await this.userRepo.findOne({
+where:{ email: body.email }
+});
 
-  }
+if(!user){
+return { message:"User not found" };
+}
+
+if(user.password !== body.password){
+return { message:"Invalid password" };
+}
+
+return {
+message:"Login successful",
+userId:user.id,
+role:user.role
+};
+
+}
+
+
+async resetPassword(body:any){
+
+const user = await this.userRepo.findOne({
+where:{ email: body.email }
+});
+
+if(!user){
+return { message:"User not found" };
+}
+
+user.password = body.newPassword;
+
+await this.userRepo.save(user);
+
+return { message:"Password updated successfully" };
+
+}
 
 }

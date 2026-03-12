@@ -11,21 +11,34 @@ export class BorrowService {
     private borrowRepo: Repository<Borrow>,
   ) {}
 
-  async borrowBook(data: any) {
-    const borrow = this.borrowRepo.create(data);
-    return this.borrowRepo.save(borrow);
+  async create(body: any) {
+
+    const borrow = new Borrow();
+
+    borrow.userId = body.userId;
+    borrow.bookId = body.bookId;
+    borrow.bookName = body.bookName;
+    borrow.bookAuthor = body.bookAuthor;
+    borrow.isbn = body.isbn;
+
+    return await this.borrowRepo.save(borrow);
+
+  }
+  async getAllBorrows(){
+  return await this.borrowRepo.find()
+}
+
+  async getUserBorrows(userId: number) {
+    return await this.borrowRepo.find({
+      where: { userId: userId }
+    });
+
   }
 
-  async getBorrowedBooks(userId: number) {
-    return this.borrowRepo.find({
-      where: { userId }
-    });
-  }
+  async remove(id: number) {
 
-  async returnBook(id: number) {
-    return this.borrowRepo.update(id, {
-      status: 'RETURNED'
-    });
+    return await this.borrowRepo.delete(id);
+
   }
 
 }

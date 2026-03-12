@@ -21,7 +21,4 @@ export class Borrow {
   @Column()
   isbn: string;
 
-  @Column({ default: 'BORROWED' })
-  status: string;
-
 }
